@@ -1,6 +1,6 @@
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, View} from 'react-native';
+import {Platform, StyleSheet, Text, View, Image} from 'react-native';
 import MapView, {Marker} from 'react-native-maps';
 import PubNubReact from 'pubnub-react';
 
@@ -10,13 +10,19 @@ export default class App extends Component<Props> {
 
   constructor(props) {
     super(props);
+
+    this.pubnub = new PubNubReact({
+      publishKey: "pub-c-a64b528c-0749-416f-bf75-50abbfa905f9",
+      subscribeKey: "sub-c-8a8e493c-f876-11e6-80ea-0619f8945a4f"
+    });
+
     //Base State
     this.state = {
       currentLoc: {
         latitude: -1,
         longitude: -1
       },
-      //numUsers: 0,
+      numUsers: 0,
       //username: "A Naughty Moose",
       fixedOnUUID: "",
       //focusOnMe: false,
@@ -24,16 +30,15 @@ export default class App extends Component<Props> {
       //splashLoading: true,
       //shift: new Animated.Value(0),
       //currentPicture: null,
-      //isFocused: false,
-      //allowGPS: true,
+      isFocused: false,
+      allowGPS: true,
     };
 
-    this.pubnub = new PubNubReact({
-      publishKey: "pub-c-d93d7b15-4e46-42f4-ba03-c5d997844b9e",
-      subscribeKey: "sub-c-1ef826d4-78df-11e9-945c-2ea711aa6b65"
-    });
-
     this.pubnub.init(this);
+  }
+
+  async componentDidMount() {
+    this.setUpApp()
   }
 
 
@@ -71,11 +76,12 @@ export default class App extends Component<Props> {
         });
 
       }
-
+      console.log(msg.message);
+      console.log(this.users);
     });
 
     this.pubnub.subscribe({
-      channels: ["global"],
+      channels: ["channel"],
     });
 
     //Get Stationary Coordinate
@@ -87,7 +93,7 @@ export default class App extends Component<Props> {
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
             },
-            channel: "global"
+            channel: "channel"
           });
           let users = this.state.users;
           let tempUser = {
@@ -118,9 +124,10 @@ export default class App extends Component<Props> {
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
             },
-            channel: "global"
+            channel: "channel"
           });
         }
+        //console.log(positon.coords);
       },
       error => console.log("Maps Error: ", error),
       {
@@ -132,14 +139,18 @@ export default class App extends Component<Props> {
 
 
   componentDidUpdate(prevProps, prevState) {
-
+    if (prevState.allowGPS != this.state.allowGPS) {
       if (this.state.allowGPS) {
-        
+        if (this.state.focusOnMe) {
+          this.animateToCurrent(this.state.currentLoc, 1000);
+        }
         let users = this.state.users;
         let tempUser = {
           uuid: this.pubnub.getUUID(),
           latitude: this.state.currentLoc.latitude,
           longitude: this.state.currentLoc.longitude,
+          image: this.state.currentPicture,
+          username: this.state.username
         };
         users.set(tempUser.uuid, tempUser);
         this.setState(
@@ -149,7 +160,7 @@ export default class App extends Component<Props> {
           () => {
             this.pubnub.publish({
               message: tempUser,
-              channel: "global"
+              channel: "channel"
             });
           }
         );
@@ -165,10 +176,10 @@ export default class App extends Component<Props> {
           message: {
             hideUser: true
           },
-          channel: "global"
+          channel: "channel"
         });
       }
-    
+    }
   }
 
   clearMessage = uuid => {
@@ -242,6 +253,7 @@ export default class App extends Component<Props> {
               longitudeDelta: 60.0001
             }}
           >
+            {console.log("users: ", this.state.users.values())}
             {usersArray.map((item) => (
               <Marker
                 style={styles.marker}
@@ -254,6 +266,10 @@ export default class App extends Component<Props> {
                   this.marker = marker;
                 }}
               >
+                <Image
+                    style={styles.profile}
+                    source={require('./heart.png')}
+                />
               </Marker>
             ))}
           </MapView>
@@ -270,6 +286,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
+  },
+  profile: {
+    width: 30,
+    height: 30
   },
   marker: {
     justifyContent: "center",
