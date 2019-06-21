@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>logFormatVersion</key>
+	<integer>10</integer>
+	<key>logs</key>
+	<dict>
+		<key>9380C4C3-1640-4DEB-9CCA-52978A38728A</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>9380C4C3-1640-4DEB-9CCA-52978A38728A.xcactivitylog</string>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>PubNubMaps project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>PubNubMaps</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Building project PubNubMaps with scheme PubNubMaps and configuration Debug</string>
+			<key>timeStartedRecording</key>
+			<real>582756895.58628404</real>
+			<key>timeStoppedRecording</key>
+			<real>582756902.41148305</real>
+			<key>title</key>
+			<string>Building project PubNubMaps with scheme PubNubMaps and configuration Debug</string>
+			<key>uniqueIdentifier</key>
+			<string>9380C4C3-1640-4DEB-9CCA-52978A38728A</string>
+		</dict>
+	</dict>
+</dict>
+</plist>
