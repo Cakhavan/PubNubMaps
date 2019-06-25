@@ -1,6 +1,6 @@
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, View, Image} from 'react-native';
+import {Platform, StyleSheet, Text, View, TouchableOpacity, Image} from 'react-native';
 import MapView, {Marker} from 'react-native-maps';
 import PubNubReact from 'pubnub-react';
 
@@ -25,11 +25,8 @@ export default class App extends Component<Props> {
       numUsers: 0,
       //username: "A Naughty Moose",
       fixedOnUUID: "",
-      //focusOnMe: false,
+      focusOnMe: false,
       users: new Map(),
-      //splashLoading: true,
-      //shift: new Animated.Value(0),
-      //currentPicture: null,
       isFocused: false,
       allowGPS: true,
     };
@@ -41,10 +38,29 @@ export default class App extends Component<Props> {
     this.setUpApp()
   }
 
+  focusLoc = () => {
+    if (this.state.focusOnMe || this.state.fixedOnUUID) {
+      this.setState({
+        focusOnMe: false,
+        fixedOnUUID: ""
+      });
+    } else {
+      region = {
+        latitude: this.state.currentLoc.latitude,
+        longitude: this.state.currentLoc.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01
+      };
+      this.setState({
+        focusOnMe: true
+      });
+      this.map.animateToRegion(region, 2000);
+    }
+  }
 
   async setUpApp(){
 
-    this.pubnub.getMessage("global", msg => {
+    this.pubnub.getMessage("channel", msg => {
       let users = this.state.users;
       if (msg.message.hideUser) {
         users.delete(msg.publisher);
@@ -68,7 +84,6 @@ export default class App extends Component<Props> {
         }else if(oldUser){
           newUser.message = oldUser.message
         }
-        this.updateUserCount
         users.set(newUser.uuid, newUser);
 
         this.setState({
@@ -76,8 +91,6 @@ export default class App extends Component<Props> {
         });
 
       }
-      console.log(msg.message);
-      console.log(this.users);
     });
 
     this.pubnub.subscribe({
@@ -139,9 +152,9 @@ export default class App extends Component<Props> {
 
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.allowGPS != this.state.allowGPS) {
-      if (this.state.allowGPS) {
-        if (this.state.focusOnMe) {
+    if (prevState.allowGPS != this.state.allowGPS) { //check whether the user just toggled their GPS settings
+      if (this.state.allowGPS) { //if user toggled to show their GPS data
+        if (this.state.focusOnMe) { //if user toggled to focus map view on themselves
           this.animateToCurrent(this.state.currentLoc, 1000);
         }
         let users = this.state.users;
@@ -164,7 +177,7 @@ export default class App extends Component<Props> {
             });
           }
         );
-      } else {
+      } else { //if user toggled to hide their GPS data
         let users = this.state.users;
         let uuid = this.pubnub.getUUID();
 
@@ -193,36 +206,6 @@ export default class App extends Component<Props> {
     });
   };
 
-
-  isEquivalent = (a, b) => {
-    if (!a || !b) {
-      if (a === b) return true;
-      return false;
-    }
-    // Create arrays of property names
-    var aProps = Object.getOwnPropertyNames(a);
-    var bProps = Object.getOwnPropertyNames(b);
-
-    // If number of properties is different,
-    // objects are not equivalent
-    if (aProps.length != bProps.length) {
-      return false;
-    }
-
-    for (var i = 0; i < aProps.length; i++) {
-      var propName = aProps[i];
-
-      // If values of same property are not equal,
-      // objects are not equivalent
-      if (a[propName] !== b[propName]) {
-        return false;
-      }
-    }
-
-    // If we made it this far, objects
-    // are considered equivalent
-    return true;
-  };
 
 
   animateToCurrent = (coords, speed) => {
@@ -273,6 +256,14 @@ export default class App extends Component<Props> {
               </Marker>
             ))}
           </MapView>
+
+
+          <View style={styles.bottomRow}>
+                  
+                    <TouchableOpacity onPress={this.focusLoc}>
+                      <Image style={styles.profile} source={require('./heart.png')} />
+                    </TouchableOpacity>
+          </View>
       </View>
       
 
