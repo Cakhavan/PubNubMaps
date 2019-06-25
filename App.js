@@ -1,6 +1,7 @@
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, View, TouchableOpacity, Image} from 'react-native';
+import {Platform, StyleSheet, Text, View, TouchableOpacity, Switch, Image} from 'react-native';
+import {widthPercentageToDP as wp, heightPercentageToDP as hp} from 'react-native-responsive-screen';
 import MapView, {Marker} from 'react-native-maps';
 import PubNubReact from 'pubnub-react';
 
@@ -28,6 +29,7 @@ export default class App extends Component<Props> {
       focusOnMe: false,
       users: new Map(),
       isFocused: false,
+      userCount: 0,
       allowGPS: true,
     };
 
@@ -57,6 +59,12 @@ export default class App extends Component<Props> {
       this.map.animateToRegion(region, 2000);
     }
   }
+
+  toggleGPS = () => {
+    this.setState({
+      allowGPS: !this.state.allowGPS
+    });
+  };
 
   async setUpApp(){
 
@@ -257,12 +265,22 @@ export default class App extends Component<Props> {
             ))}
           </MapView>
 
+          <View style={styles.topBar}>
+            <View style={styles.rightBar}>
+                <Switch
+                value={this.state.allowGPS}
+                style={styles.locationSwitch}
+                onValueChange={this.toggleGPS}
+                />
+            </View>
+          </View>
 
-          <View style={styles.bottomRow}>
-                  
-                    <TouchableOpacity onPress={this.focusLoc}>
-                      <Image style={styles.profile} source={require('./heart.png')} />
-                    </TouchableOpacity>
+          <View style={styles.bottom}>
+          <View style={styles.bottomRow}>   
+            <TouchableOpacity onPress={this.focusLoc}>
+              <Image style={styles.focusLoc} source={require('./heart.png')} />
+            </TouchableOpacity>
+          </View>
           </View>
       </View>
       
@@ -271,23 +289,64 @@ export default class App extends Component<Props> {
   }
 }
 
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  profile: {
-    width: 30,
-    height: 30
+  bottomRow:{
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center"
   },
   marker: {
     justifyContent: "center",
     alignItems: "center",
-    marginTop: Platform.OS === "android" ? 100 : 0,
+    marginTop:  100,
+  },
+  topBar: {
+    top:  hp('5%'),
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginHorizontal: wp("2%"),
+  },
+  rightBar: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center"
+  },
+  locationSwitch: {
+    right: 1,
+  },
+  container: {
+    flex: 1
+  },
+  profile: {
+    width: hp("4.5%"),
+    height: hp("4.5%")
+  },
+  bottom: {
+    position: "absolute",
+    flexDirection:'column',
+    bottom: 0,
+    justifyContent: "center",
+    alignSelf: "center",
+    width: "100%",
+    marginBottom: hp("4%"),
+
+  },
+  focusLoc: {
+    width: hp("4.5%"),
+    height: hp("4.5%"),
+    marginRight: wp("2%")
   },
   map: {
     ...StyleSheet.absoluteFillObject
+  },
+  content: {
+    backgroundColor: "white",
+    padding: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 4,
+    borderColor: "rgba(0, 0, 0, 0.1)"
   },
 });
