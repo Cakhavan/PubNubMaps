@@ -13,8 +13,8 @@ export default class App extends Component<Props> {
     super(props);
 
     this.pubnub = new PubNubReact({
-      publishKey: "pub-c-58fc74dc-ee81-4d36-b829-820346af213b",
-      subscribeKey: "sub-c-45c90962-8f0b-11e9-882a-5a9c8da9cc13"
+      publishKey: "YOUR PUBLISH KEY",
+      subscribeKey: "YOUR SUBSCRIBE KEY"
     });
 
     //Base State
