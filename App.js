@@ -13,8 +13,8 @@ export default class App extends Component<Props> {
     super(props);
 
     this.pubnub = new PubNubReact({
-      publishKey: "pub-c-a64b528c-0749-416f-bf75-50abbfa905f9",
-      subscribeKey: "sub-c-8a8e493c-f876-11e6-80ea-0619f8945a4f"
+      publishKey: "pub-c-58fc74dc-ee81-4d36-b829-820346af213b",
+      subscribeKey: "sub-c-45c90962-8f0b-11e9-882a-5a9c8da9cc13"
     });
 
     //Base State
@@ -24,13 +24,13 @@ export default class App extends Component<Props> {
         longitude: -1
       },
       numUsers: 0,
-      //username: "A Naughty Moose",
       fixedOnUUID: "",
       focusOnMe: false,
       users: new Map(),
       isFocused: false,
       userCount: 0,
       allowGPS: true,
+      userCount: 0,
     };
 
     this.pubnub.init(this);
@@ -68,7 +68,7 @@ export default class App extends Component<Props> {
 
   async setUpApp(){
 
-    this.pubnub.getMessage("channel", msg => {
+    this.pubnub.getMessage("global", msg => {
       let users = this.state.users;
       if (msg.message.hideUser) {
         users.delete(msg.publisher);
@@ -92,8 +92,8 @@ export default class App extends Component<Props> {
         }else if(oldUser){
           newUser.message = oldUser.message
         }
+        this.updateUserCount();
         users.set(newUser.uuid, newUser);
-
         this.setState({
           users
         });
@@ -102,7 +102,8 @@ export default class App extends Component<Props> {
     });
 
     this.pubnub.subscribe({
-      channels: ["channel"],
+      channels: ["global"],
+      withPresence: true
     });
 
     //Get Stationary Coordinate
@@ -114,7 +115,7 @@ export default class App extends Component<Props> {
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
             },
-            channel: "channel"
+            channel: "global"
           });
           let users = this.state.users;
           let tempUser = {
@@ -145,7 +146,7 @@ export default class App extends Component<Props> {
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
             },
-            channel: "channel"
+            channel: "global"
           });
         }
         //console.log(positon.coords);
@@ -181,7 +182,7 @@ export default class App extends Component<Props> {
           () => {
             this.pubnub.publish({
               message: tempUser,
-              channel: "channel"
+              channel: "global"
             });
           }
         );
@@ -197,23 +198,26 @@ export default class App extends Component<Props> {
           message: {
             hideUser: true
           },
-          channel: "channel"
+          channel: "global"
         });
       }
     }
   }
 
-  clearMessage = uuid => {
-    let users = this.state.users;
-    let user = users.get(uuid)
-    delete user.message;
-    users.set(uuid,user);
-    this.setState(
-    {
-      users,
+  updateUserCount = () => {
+    var presenceUsers = 0;
+    this.pubnub.hereNow({
+        includeUUIDs: true,
+        includeState: true
+    },
+    function (status, response) {
+        // handle status, response
+        presenceUsers = response.totalOccupancy;
     });
-  };
+    var totalUsers = Math.max(presenceUsers, this.state.users.size)
+    this.setState({userCount: totalUsers})
 
+  };
 
 
   animateToCurrent = (coords, speed) => {
@@ -259,11 +263,19 @@ export default class App extends Component<Props> {
               >
                 <Image
                     style={styles.profile}
-                    source={require('./heart.png')}
+                    source={require('./car.png')}
                 />
               </Marker>
             ))}
           </MapView>
+
+          <View style={styles.topBar}>
+            <View style={styles.leftBar}>
+              <View style={styles.userCount}>
+                  <Text>{this.state.userCount}</Text>
+              </View>
+            </View>
+          </View>
 
           <View style={styles.topBar}>
             <View style={styles.rightBar}>
@@ -278,7 +290,7 @@ export default class App extends Component<Props> {
           <View style={styles.bottom}>
           <View style={styles.bottomRow}>   
             <TouchableOpacity onPress={this.focusLoc}>
-              <Image style={styles.focusLoc} source={require('./heart.png')} />
+              <Image style={styles.focusLoc} source={require('./crosshair.png')} />
             </TouchableOpacity>
           </View>
           </View>
@@ -289,7 +301,6 @@ export default class App extends Component<Props> {
   }
 }
 
-
 const styles = StyleSheet.create({
   bottomRow:{
     flexDirection: "row",
@@ -299,10 +310,11 @@ const styles = StyleSheet.create({
   marker: {
     justifyContent: "center",
     alignItems: "center",
-    marginTop:  100,
+    marginTop: Platform.OS === "android" ? 100 : 0,
   },
   topBar: {
-    top:  hp('5%'),
+    top: Platform.OS === "android" ? hp('2%') : hp('5%'),
+
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -313,15 +325,16 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     alignItems: "center"
   },
+  leftBar: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center"
+  },
   locationSwitch: {
-    right: 1,
+    left: 300,
   },
   container: {
     flex: 1
-  },
-  profile: {
-    width: hp("4.5%"),
-    height: hp("4.5%")
   },
   bottom: {
     position: "absolute",
@@ -331,22 +344,21 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     width: "100%",
     marginBottom: hp("4%"),
-
   },
   focusLoc: {
     width: hp("4.5%"),
     height: hp("4.5%"),
-    marginRight: wp("2%")
+    marginRight: wp("2%"),
+    left: 15
+  },
+  userCount: {
+    marginHorizontal: 10
   },
   map: {
     ...StyleSheet.absoluteFillObject
   },
-  content: {
-    backgroundColor: "white",
-    padding: 22,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 4,
-    borderColor: "rgba(0, 0, 0, 0.1)"
+  profile: {
+    width: hp("4.5%"),
+    height: hp("4.5%")
   },
 });
